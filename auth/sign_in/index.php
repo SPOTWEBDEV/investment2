@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                 <div class="col-xl-8">
                     <div class="row g-0">
                         
-                        <div class="col-lg-6">
+                        <div class="col-lg-12">
                             <div class="auth-form">
                                 <h4>Sign In</h4>
 
