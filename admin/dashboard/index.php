@@ -35,7 +35,7 @@ echo json_encode([
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Ekash : Personal Finance Management Admin Dashboard HTML Template</title>
+    <title><?php echo $sitename ?>-- Admin Dashboard</title>
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="<?php echo $domain ?>/images/favicon.png">
     <!-- Custom Stylesheet -->
@@ -167,7 +167,7 @@ echo json_encode([
                                 <div class="col-xl-4">
                                     <div class="page-title-content">
                                         <h3>Dashboard</h3>
-                                        <p class="mb-2">Welcome Ekash Finance Management</p>
+                                        <p class="mb-2">Welcome <?php echo $sitename ?>  Management</p>
                                     </div>
                                 </div>
                                 <div class="col-auto">
@@ -218,55 +218,83 @@ echo json_encode([
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title">Transfer History</h4>
+                                <h4 class="card-title">Transactions History</h4>
                             </div>
                             <div class="card-body">
                                 <div class="transaction-table">
-                                    <div class="table-responsive">
+                                   <div class="table-responsive">
+                                        <?php
+                                        $sql = "
+                                                SELECT id, 'Deposit' AS type, amount, created_at AS date, status
+                                                FROM deposits
+                                                WHERE user_id = ?
+                                                
+                                                UNION ALL
+                                                
+                                                SELECT id, 'Withdrawal' AS type, -amount AS amount, created_at AS date, status
+                                                FROM withdrawals
+                                                WHERE user_id = ?
+                                                
+                                                UNION ALL
+                                                
+                                                SELECT id, 'Investment' AS type, -amount AS amount, created_at AS date, status
+                                                FROM investments
+                                                WHERE user_id = ?
+                                                
+                                                ORDER BY date DESC
+                                                LIMIT 5
+                                            ";
+
+                                            $stmt = mysqli_prepare($connection, $sql);
+                                            mysqli_stmt_bind_param($stmt, "iii", $id, $id, $id);
+                                            mysqli_stmt_execute($stmt);
+                                            $result = mysqli_stmt_get_result($stmt);
+                                            ?>
+
                                         <table class="table mb-0 table-responsive-sm">
                                             <thead>
                                                 <tr>
                                                     <th>Id</th>
-                                                    <th>Account Number</th>
-                                                    <th>Bank</th>
-                                                    <th>Narration</th>
-                                                    <th>Amount</th>
+                                                    <th>Transaction Type</th>
+                                                    <th>Transaction Amount</th>
+                                                    <th>Transaction Date</th>
                                                     <th>Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <?php
-
-                                                $query = $connection->query("SELECT * FROM bank_transfers ORDER BY id DESC LIMIT 5");
-                                                if ($query->num_rows > 0) {
-                                                    while ($transfer = $query->fetch_assoc()) { ?>
-
+                                                if (mysqli_num_rows($result) > 0) {
+                                                    $count = 0;
+                                                    while ($transaction = mysqli_fetch_assoc($result)) {
+                                                        $count++;
+                                                        // Format amount with ₦ sign
+                                                        $amount = number_format($transaction['amount'], 2);
+                                                        if ($transaction['amount'] < 0) {
+                                                            $amount = "-₦" . number_format(abs($transaction['amount']), 2);
+                                                        } else {
+                                                            $amount = "₦" . $amount;
+                                                        }
+                                                ?>
                                                         <tr>
-                                                            <td>1</td>
-                                                            <td><?php echo $transfer['receiver_account_number'] ?></td>
-                                                            <td><?php echo $transfer['receiver_bank'] ?></td>
-                                                            <td>Payment for services</td>
-                                                            <td>$<?php echo $transfer['amount']  ?></td>
+                                                            <td><?= $count ?></td>
+                                                            <td><?= htmlspecialchars($transaction['type']) ?></td>
+                                                            <td><?= $amount ?></td>
+                                                            <td><?= date("Y-m-d", strtotime($transaction['date'])) ?></td>
                                                             <td>
-                                                                <span class="badge text-white <?php
-                                                                                                echo ($transfer['status'] == 'pending')
-                                                                                                    ? 'bg-warning'
-                                                                                                    : (($transfer['status'] == 'completed')
-                                                                                                        ? 'bg-success'
-                                                                                                        : 'bg-danger'); ?>">
-                                                                    <?php echo ucfirst($transfer['status']); ?>
+                                                                <span class="badge text-white 
+                                                                    <?= $transaction['status'] == 'pending' ? 'bg-warning' : ($transaction['status'] == 'completed' ? 'bg-success' : 'bg-danger') ?>">
+                                                                    <?= ucfirst($transaction['status']) ?>
                                                                 </span>
                                                             </td>
-
                                                         </tr>
-
-                                                <?php }
+                                                <?php
+                                                    }
+                                                } else {
+                                                    echo '<tr><td colspan="5" class="text-center text-danger">No transaction history found.</td></tr>';
                                                 }
-
                                                 ?>
-
-
                                             </tbody>
+
                                         </table>
                                     </div>
                                 </div>
@@ -286,7 +314,7 @@ echo json_encode([
                                     var CurrentYear = new Date().getFullYear()
                                     document.write(CurrentYear)
                                 </script>
-                                <a href="index.html#">Ekash</a> I All Rights Reserved
+                                <a href="index.html#"><?php  echo $sitename ?></a> I All Rights Reserved
                             </p>
                         </div>
                     </div>

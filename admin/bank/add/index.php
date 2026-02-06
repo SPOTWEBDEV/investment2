@@ -17,7 +17,7 @@ include("../../controllers/paymentaccount.php");
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Ekash : Personal Finance Management Admin Dashboard HTML Template</title>
+    <title><?php echo $sitename ?>-- Admin Dashboard</title>
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="<?php echo $domain ?>/images/favicon.png">
     <!-- Custom Stylesheet -->
@@ -66,10 +66,7 @@ include("../../controllers/paymentaccount.php");
 
                                             <!-- BANK ACCOUNT FORM -->
                                             <div class="form-row">
-                                                <div class="mb-3 col-xl-12">
-                                                    <label>Routing Number</label>
-                                                    <input type="text" name="routing_number" class="form-control" placeholder="25487">
-                                                </div>
+                                                
                                                 <div class="mb-3 col-xl-12">
                                                     <label>Bank Name</label>
                                                     <input type="text" name="bank_name" class="form-control" placeholder="36475">
@@ -138,7 +135,7 @@ include("../../controllers/paymentaccount.php");
                                     var CurrentYear = new Date().getFullYear()
                                     document.write(CurrentYear)
                                 </script>
-                                <a href="add-bank.html#">Ekash</a> I All Rights Reserved
+                                <a href="add-bank.html#"><?php  echo $sitename ?></a> I All Rights Reserved
                             </p>
                         </div>
                     </div>

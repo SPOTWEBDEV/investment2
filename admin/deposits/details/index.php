@@ -18,7 +18,6 @@ $sql = "
         users.email AS user_email,
 
         payment_account.type AS account_type,
-        payment_account.routing_number,
         payment_account.account_number,
         payment_account.bank_name,
         payment_account.fullname AS account_fullname,
@@ -191,10 +190,7 @@ if (isset($_GET['decline_deposit'])) {
                                                     <td><?php echo $deposit['account_fullname']; ?></td>
                                                 </tr>
 
-                                                <tr>
-                                                    <td>Routing Number:</td>
-                                                    <td><?php echo $deposit['routing_number']; ?></td>
-                                                </tr>
+                                                
                                             <?php } ?>
 
                                             <!-- Crypto Wallet (if crypto) -->

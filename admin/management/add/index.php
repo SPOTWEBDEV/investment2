@@ -275,7 +275,7 @@ include("../../controllers/management.php");
                                     var CurrentYear = new Date().getFullYear()
                                     document.write(CurrentYear)
                                 </script>
-                                <a href="add-bank.html#">Ekash</a> I All Rights Reserved
+                                <a href="add-bank.html#"><?php  echo $sitename ?></a> I All Rights Reserved
                             </p>
                         </div>
                     </div>

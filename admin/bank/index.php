@@ -29,7 +29,7 @@ if(isset($_GET['delete'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Ekash : Personal Finance Management Admin Dashboard HTML Template</title>
+    <title><?php echo $sitename ?>-- Admin Dashboard</title>
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="<?php echo $domain ?>/images/favicon.png">
     <!-- Custom Stylesheet -->
@@ -135,7 +135,7 @@ if(isset($_GET['delete'])) {
                                     var CurrentYear = new Date().getFullYear()
                                     document.write(CurrentYear)
                                 </script>
-                                <a href="add-bank.html#">Ekash</a> I All Rights Reserved
+                                <a href="add-bank.html#"><?php  echo $sitename ?></a> I All Rights Reserved
                             </p>
                         </div>
                     </div>

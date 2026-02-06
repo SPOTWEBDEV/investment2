@@ -22,21 +22,20 @@
         if ($type === "bank") {
 
             // BANK INPUTS
-            $routing_number = $_POST['routing_number'] ?? null;
+
             $account_number = $_POST['account_number'] ?? null;
             $fullname       = $_POST['fullname'] ?? null;
             $bank_name = $_POST['bank_name'] ?? null;
 
             // INSERT BANK INTO payment_account
             $sql = "INSERT INTO payment_account 
-                (type, routing_number, account_number, fullname , bank_name) 
-                VALUES ('bank', ?, ?, ? , ?)";
+                (type, account_number, fullname , bank_name) 
+                VALUES ('bank', ?, ? , ?)";
 
             $stmt = mysqli_prepare($connection, $sql);
             mysqli_stmt_bind_param(
                 $stmt,
-                "ssss",
-                $routing_number,
+                "sss",
                 $account_number,
                 $fullname,
                 $bank_name

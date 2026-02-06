@@ -116,8 +116,8 @@ function money($amount)
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    
+
+
                                 </div>
                             </div>
 
@@ -179,7 +179,7 @@ function money($amount)
 
                                 </div>
 
-                               
+
 
 
 
@@ -197,52 +197,78 @@ function money($amount)
                             <div class="card-body">
                                 <div class="transaction-table">
                                     <div class="table-responsive">
+                                        <?php
+                                        $sql = "
+                                                SELECT id, 'Deposit' AS type, amount, created_at AS date, status
+                                                FROM deposits
+                                                WHERE user_id = ?
+                                                
+                                                UNION ALL
+                                                
+                                                SELECT id, 'Withdrawal' AS type, -amount AS amount, created_at AS date, status
+                                                FROM withdrawals
+                                                WHERE user_id = ?
+                                                
+                                                UNION ALL
+                                                
+                                                SELECT id, 'Investment' AS type, -amount AS amount, created_at AS date, status
+                                                FROM investments
+                                                WHERE user_id = ?
+                                                
+                                                ORDER BY date DESC
+                                                LIMIT 5
+                                            ";
+
+                                            $stmt = mysqli_prepare($connection, $sql);
+                                            mysqli_stmt_bind_param($stmt, "iii", $id, $id, $id);
+                                            mysqli_stmt_execute($stmt);
+                                            $result = mysqli_stmt_get_result($stmt);
+                                            ?>
+
                                         <table class="table mb-0 table-responsive-sm">
                                             <thead>
                                                 <tr>
                                                     <th>Id</th>
-                                                    <th>Account Number</th>
-                                                    <th>Bank</th>
-                                                    <th>Narration</th>
-                                                    <th>Amount</th>
+                                                    <th>Transaction Type</th>
+                                                    <th>Transaction Amount</th>
+                                                    <th>Transaction Date</th>
                                                     <th>Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <?php
-
-                                                $query = $connection->query("SELECT * FROM deposits WHERE user_id=$id ORDER BY id DESC LIMIT 5");
-                                                if ($query->num_rows > 0) {
-                                                    while ($transaction = $query->fetch_assoc()) { ?>
-
+                                                if (mysqli_num_rows($result) > 0) {
+                                                    $count = 0;
+                                                    while ($transaction = mysqli_fetch_assoc($result)) {
+                                                        $count++;
+                                                        // Format amount with ₦ sign
+                                                        $amount = number_format($transaction['amount'], 2);
+                                                        if ($transaction['amount'] < 0) {
+                                                            $amount = "-₦" . number_format(abs($transaction['amount']), 2);
+                                                        } else {
+                                                            $amount = "₦" . $amount;
+                                                        }
+                                                ?>
                                                         <tr>
-                                                            <td>1</td>
-                                                            <td><?php echo $transaction['amount'] ?></td>
-                                                            
-                                                            <td>Payment for services</td>
-                                                            <td>$<?php echo $transaction['amount']  ?></td>
+                                                            <td><?= $count ?></td>
+                                                            <td><?= htmlspecialchars($transaction['type']) ?></td>
+                                                            <td><?= $amount ?></td>
+                                                            <td><?= date("Y-m-d", strtotime($transaction['date'])) ?></td>
                                                             <td>
-                                                                <span class="badge text-white <?php
-                                                                                                echo ($transaction['status'] == 'pending')
-                                                                                                    ? 'bg-warning'
-                                                                                                    : (($transaction['status'] == 'completed')
-                                                                                                        ? 'bg-success'
-                                                                                                        : 'bg-danger'); ?>">
-                                                                    <?php echo ucfirst($transaction['status']); ?>
+                                                                <span class="badge text-white 
+                                                                    <?= $transaction['status'] == 'pending' ? 'bg-warning' : ($transaction['status'] == 'completed' ? 'bg-success' : 'bg-danger') ?>">
+                                                                    <?= ucfirst($transaction['status']) ?>
                                                                 </span>
                                                             </td>
-
                                                         </tr>
-
-                                                <?php }
+                                                <?php
+                                                    }
                                                 } else {
-                                                    echo '<tr><td class="text-danger">No transaction history found.</td></tr>';
+                                                    echo '<tr><td colspan="5" class="text-center text-danger">No transaction history found.</td></tr>';
                                                 }
-
                                                 ?>
-
-
                                             </tbody>
+
                                         </table>
                                     </div>
                                 </div>

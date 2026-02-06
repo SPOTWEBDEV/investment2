@@ -284,7 +284,7 @@ include("../../server/connection.php");
                                     var CurrentYear = new Date().getFullYear()
                                     document.write(CurrentYear)
                                 </script>
-                                <a href="settings-api.html#">Ekash</a> I All Rights Reserved
+                                <a href="settings-api.html#"><?php  echo $sitename ?></a> I All Rights Reserved
                             </p>
                         </div>
                     </div>
