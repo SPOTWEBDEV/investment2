@@ -39,7 +39,7 @@
                 </a>
             </li>
 
-            <!-- Transfers -->
+          
             <li>
                 <a href="<?= $domain ?>/admin/investment/">
                     <span><i class="fi fi-rr-list"></i></span>

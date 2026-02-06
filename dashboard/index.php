@@ -161,10 +161,10 @@ function money($amount)
                                                         </div>
 
                                                         <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12">
-                                                            <a href="<?php echo $domain ?>/transfer/" class="d-block text-decoration-none">
+                                                            <a href="<?php echo $domain ?>/investment/" class="d-block text-decoration-none">
                                                                 <div class="stat-widget-1">
-                                                                    <h6><i class="fi fi-rr-exchange me-2"></i>Transfer</h6>
-                                                                    <p class="mb-0">Send money</p>
+                                                                    <h6><i class="fi fi-rr-exchange me-2"></i>Investment</h6>
+                                                                    <p class="mb-0">Earn money</p>
                                                                 </div>
                                                             </a>
                                                         </div>

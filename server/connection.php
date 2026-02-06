@@ -19,6 +19,8 @@ $request = checkUrlProtocol($currentUrl);
 
 define("HOST", "localhost");
 
+echo $request;
+
 if ($request === 'https') {
     $domain = "https://spotwebtech.com.ng";
     define("USER", "spotweb1_nucor");

@@ -1,10 +1,6 @@
 <?php
 include("../../server/connection.php");
-// chunk_split($rawCardNumber, 4, ' ');
-// echo implode(' ', str_split($row['virtual_card_number'], 4));
-// $expDisplay = date('m/y', strtotime($row['virtual_card_expiring_date']));
-// If you want without leading zero: n/y
-// $expDisplay = date('n/y', strtotime($row['virtual_card_expiring_date']));
+
 
 
 
@@ -20,33 +16,7 @@ $fullname = "";
 $email = "";
 $accept_terms = "";
 
-function generateUniqueCardNumber($connection) {
-    while (true) {
-        // 16 digits, first digit 1-9 so it doesn't start with 0
-        $card = strval(random_int(1, 9));
-        for ($i = 0; $i < 15; $i++) {
-            $card .= strval(random_int(0, 9));
-        }
 
-        $checkSql = "SELECT id FROM users WHERE virtual_card_number = ? LIMIT 1";
-        $checkStmt = mysqli_prepare($connection, $checkSql);
-        if (!$checkStmt) {
-            // if prepare fails, stop immediately
-            throw new Exception("server error: ");
-        }
-
-        mysqli_stmt_bind_param($checkStmt, "s", $card);
-        mysqli_stmt_execute($checkStmt);
-        mysqli_stmt_store_result($checkStmt);
-
-        $exists = (mysqli_stmt_num_rows($checkStmt) > 0);
-        mysqli_stmt_close($checkStmt);
-
-        if (!$exists) {
-            return $card;
-        }
-    }
-}
 
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
@@ -107,30 +77,22 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
     if (!$hasError) {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        // 1) Generate unique card number
-        try {
-            $virtualCardNumber = generateUniqueCardNumber($connection);
-        } catch (Exception $e) {
-            $success = $e->getMessage();
-            $hasError = true;
-        }
+       
 
         $virtualCardExpiry = (new DateTime())->modify('+4 years')->format('Y-m-d');
 
         if (!$hasError) {
-            $sql = "INSERT INTO users (fullname, email, password, virtual_card_number, virtual_card_expiring_date)
-                    VALUES (?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO users (fullname, email, password)
+                    VALUES (?, ?, ?)";
             $stmt = mysqli_prepare($connection, $sql);
 
             if ($stmt) {
                 mysqli_stmt_bind_param(
                     $stmt,
-                    "sssss",
+                    "sss",
                     $fullname,
                     $email,
                     $hashedPassword,
-                    $virtualCardNumber,
-                    $virtualCardExpiry
                 );
 
                 mysqli_stmt_execute($stmt);
