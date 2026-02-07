@@ -223,9 +223,16 @@ if (isset($_GET['decline_deposit'])) {
                                                         <a href="<?php echo $domain ?>/admin/deposits/">
                                                             <button class="btn btn-primary btn-sm">Back to Deposits</button>
                                                         </a>
+                                                        <?php
+
+                                                        if ($deposit['status'] != "approved"){ ?>
+
                                                         <a href="?approve_deposit=<?= $deposit['id'] ?>&amount=<?= $deposit['amount'] ?>&user_id=<?= $deposit['user_id'] ?>">
                                                             <button class="btn btn-success btn-sm approve-deposit">Approve</button>
                                                         </a>
+
+                                                        <?php } ?>
+                                                        
                                                         <a href="?decline_deposit=<?= $deposit['id'] ?>&amount=<?= $deposit['amount'] ?>&user_id=<?= $deposit['user_id'] ?>">
                                                             <button class="btn btn-danger btn-sm decline-deposit">Decline</button>
                                                         </a>
