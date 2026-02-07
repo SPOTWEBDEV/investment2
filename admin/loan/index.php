@@ -136,7 +136,7 @@ $success = "";
                                                             <tr>
                                                                 <td><?=  $count?></td>
                                                                 <td><?= htmlspecialchars($row['fullname']) ?></td>
-                                                                <td>$<?= number_format($row['loan_amount'], 2) ?></td>
+                                                                <td>₦<?= number_format($row['loan_amount'], 2) ?></td>
 
                                                                    <td><?= date("Y-m-d", strtotime($row['created_at'])) ?></td>
                                                                 <td>

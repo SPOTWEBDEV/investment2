@@ -80,9 +80,9 @@ $user_id = $_SESSION['user_id'];
                         $sql = "
     SELECT 
         deposits.amount,
-        deposits.type_id,
+        deposits.type,
         deposits.status,
-        deposits.date,
+        deposits.created_at,
         users.fullname
     FROM deposits
     INNER JOIN users ON deposits.user_id = users.id
@@ -118,9 +118,9 @@ $user_id = $_SESSION['user_id'];
                                                     <tr>
                                                         <td><?= $count ?></td>
                                                         <td><?= htmlspecialchars($row['fullname']) ?></td>
-                                                        <td><?= htmlspecialchars($row['type_id']) ?></td>
-                                                        <td>$<?= number_format($row['amount'], 2) ?></td>
-                                                        <td><?= date("Y-m-d", strtotime($row['date'])) ?></td>
+                                                        <td><?= htmlspecialchars($row['type']) ?></td>
+                                                        <td>₦<?= number_format($row['amount'], 2) ?></td>
+                                                        <td><?= date("Y-m-d", strtotime($row['created_at'])) ?></td>
                                                         <td>
                                                             <span class="badge 
         <?php
@@ -147,33 +147,7 @@ $user_id = $_SESSION['user_id'];
                             </div>
                         </div>
                         
-                        <!-- <div class="footer">
-                            <div class="container">
-                                <div class="row">
-                                    <div class="col-xl-6">
-                                        <div class="copyright">
-                                            <p>© Copyright
-                                                <script>
-                                                    var CurrentYear = new Date().getFullYear()
-                                                    document.write(CurrentYear)
-                                                </script>
-                                                <a href="#"><?= $sitename ?></a> I All Rights Reserved
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div class="col-xl-6">
-                                        <div class="footer-social">
-                                            <ul>
-                                                <li><a href="settings-api.html#"><i class="fi fi-brands-facebook"></i></a></li>
-                                                <li><a href="settings-api.html#"><i class="fi fi-brands-twitter"></i></a></li>
-                                                <li><a href="settings-api.html#"><i class="fi fi-brands-linkedin"></i></a></li>
-                                                <li><a href="settings-api.html#"><i class="fi fi-brands-youtube"></i></a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> -->
+                      
                    
                     </div>
                     <script src="<?php echo $domain ?>/vendor/jquery/jquery.min.js"></script>

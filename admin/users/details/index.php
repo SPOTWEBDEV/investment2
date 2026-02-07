@@ -2,22 +2,75 @@
 include("../../../server/connection.php");
 
 
+
+/* =========================
+   FETCH USER
+========================= */
 $id = mysqli_real_escape_string($connection, $_GET['id']);
 
-$sql = "
-    SELECT 
-        *
-    FROM users
-    WHERE id = '$id'
-";
-
+$sql = "SELECT * FROM users WHERE id = '$id'";
 $query = $connection->query($sql);
 
+/* =========================
+   ACTIVATE USER
+========================= */
+if (isset($_GET['activate_user'])) {
+    $uid = (int) $_GET['activate_user'];
 
+    mysqli_query($connection, "
+        UPDATE users 
+        SET status='active' 
+        WHERE id='$uid'
+    ");
 
+    header("Location: ./?id=$uid");
+    exit;
+}
 
+/* =========================
+   DEACTIVATE USER
+========================= */
+if (isset($_POST['deactivate_user'])) {
+    $uid = (int) $_POST['user_id'];
+    $reason = mysqli_real_escape_string($connection, $_POST['deactivation_reason']);
 
+    mysqli_query($connection, "
+        UPDATE users 
+        SET status='suspended'
+        WHERE id='$uid'
+    ");
+
+    header("Location: ./?id=$uid");
+    exit;
+}
+
+/* =========================
+   DELETE USER (ONLY IF NOT ACTIVE)
+========================= */
+if (isset($_POST['delete_user'])) {
+    $uid =  $_POST['user_id'];
+
+    // Ensure user is not active
+    $check = mysqli_query($connection, "
+        SELECT status FROM users WHERE id='$uid'
+    ");
+    $row = mysqli_fetch_assoc($check);
+
+    
+
+        // OPTIONAL: delete related data first
+        mysqli_query($connection, "DELETE FROM withdrawals WHERE user_id='$uid'");
+        mysqli_query($connection, "DELETE FROM deposits WHERE user_id='$uid'");
+        mysqli_query($connection, "DELETE FROM investments WHERE user_id='$uid'");
+
+        // Delete user
+        mysqli_query($connection, "DELETE FROM users WHERE id='$uid'");
+
+        header("Location: ../"); 
+        
+}
 ?>
+
 
 
 <!DOCTYPE html>
@@ -94,9 +147,12 @@ $query = $connection->query($sql);
 
                             <div class="card-body">
 
+
+
                                 <!-- Profile Image -->
                                 <div class="text-center mb-4">
-                                    <img src="<?php echo $domain ?>/uploads/profile/<?php echo $user['user_profile']; ?>"
+
+                                    <img src=" <?php echo $user['user_profile'] ==  '' ? $domain . '/images/avatar/avatar.svg' : $domain . 'images/avatar/' .  $user['user_profile'] ?>"
                                         width="90" height="90"
                                         class="rounded-circle border"
                                         alt="User Profile">
@@ -123,10 +179,10 @@ $query = $connection->query($sql);
 
                                             <tr>
                                                 <td><strong>Main Balance:</strong></td>
-                                                <td>$<?php echo number_format($user['balance'], 2); ?></td>
+                                                <td>₦<?php echo number_format($user['balance'], 2); ?></td>
                                             </tr>
 
-                                           
+
                                             <tr>
                                                 <td><strong>Account Status:</strong></td>
                                                 <td>
@@ -139,24 +195,49 @@ $query = $connection->query($sql);
                                                 <td>
                                                     <strong>Action</strong>
                                                 </td>
-                                                <td>
-                                                    <?php
+                                               
 
-                                                    if( $user['status'] !== 'active' ){ ?>
-                                                        <a href="./?activate_user=<?= $user['id'] ?>">
-                                                            <button class="btn btn-success btn-sm activate-user">Activate User</button>
-                                                        </a>    
+                                                <td>
+
+                                                    <?php if ($user['status'] !== 'active') { ?>
+
+                                                        <!-- ACTIVATE -->
+                                                        <a href="./?id=<?= $user['id'] ?>&activate_user=<?= $user['id'] ?>">
+                                                            <button class="btn btn-success btn-sm mb-2">
+                                                                Activate User
+                                                            </button>
+                                                        </a>
+
+                                                        <!-- DELETE -->
+
+
                                                     <?php } else { ?>
-                                                       
-                                                       <form method="POST">
+
+                                                        <!-- DEACTIVATE -->
+                                                        <form method="POST" class="flex flex-wrap">
                                                             <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-                                                            <input type="text" name="deactivation_reason" class="form-control mb-2" placeholder="Reason for deactivation" required>
-                                                            <button type="submit" name="deactivate_user" class="btn btn-danger btn-sm deactivate-user">Deactivate User</button>
-                                                       </form>
-                                                        
-                                                    <?php }
-                                                    ?>
+                                                            <input type="text"
+                                                                name="deactivation_reason"
+                                                                class="form-control mb-2"
+                                                                placeholder="Reason for deactivation"
+                                                                required>
+                                                            <button type="submit" name="deactivate_user" class="btn btn-warning btn-sm">
+                                                                Deactivate User
+                                                            </button>
+                                                        </form>
+
+                                                    <?php } ?>
+
+                                                    <form method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this user?');">
+                                                        <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
+                                                        <button type="submit" name="delete_user" class="btn btn-danger btn-sm">
+                                                            Delete User
+                                                        </button>
+                                                    </form>
+
                                                 </td>
+
+
                                             </tr>
 
                                         </tbody>

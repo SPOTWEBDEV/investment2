@@ -2,12 +2,7 @@
 
 include("../../server/connection.php");
 
-// if (!isset($_SESSION['user_id'])) {
-//     header("location: ./signin.php");
-//     exit;
-// }
 
-$user_id = $_SESSION['user_id'];
 ?>
 
 
@@ -28,140 +23,192 @@ $user_id = $_SESSION['user_id'];
 </head>
 
 <body class="dashboard">
-       
-    
+
+
     <div id="main-wrapper">
         <!-- header -->
         <?php include("../include/nav.php") ?>
 
-       <?php include("../include/sidenav.php") ?>
+        <?php include("../include/sidenav.php") ?>
 
-        <div class="content-body">
-            <div class="container">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="page-title">
-                            <div class="row align-items-center justify-content-between">
-                                <div class="col-xl-4">
-                                    <div class="page-title-content">
-                                        <h3>Withdrawal History</h3>
-                                        <p class="mb-2">Welcome To <?= $sitename ?> Management</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+       <?php
+
+
+/* ============================
+   COUNT WITHDRAWALS BY STATUS
+============================ */
+$statusCounts = [
+    'pending' => 0,
+    'approved' => 0,
+    'failed' => 0
+];
+
+$countStatusSql = "
+    SELECT status, COUNT(*) AS total
+    FROM withdrawals
+    GROUP BY status
+";
+$countStatusResult = mysqli_query($connection, $countStatusSql);
+
+while ($row = mysqli_fetch_assoc($countStatusResult)) {
+    $statusCounts[$row['status']] = $row['total'];
+}
+
+/* ============================
+   FILTER BY STATUS
+============================ */
+$statusFilter = "";
+$status = "";
+
+if (!empty($_GET['status'])) {
+    $status = $_GET['status'];
+    $statusFilter = " AND withdrawals.status = ?";
+}
+
+/* ============================
+   FETCH WITHDRAWALS
+============================ */
+$sql = "
+    SELECT 
+        withdrawals.id,
+        withdrawals.amount,
+        withdrawals.which_account,
+        withdrawals.status,
+        withdrawals.date,
+        users.fullname
+    FROM withdrawals
+    JOIN users ON withdrawals.user_id = users.id
+    WHERE 1=1
+    $statusFilter
+    ORDER BY withdrawals.id DESC
+";
+
+$stmt = mysqli_prepare($connection, $sql);
+
+if (!empty($statusFilter)) {
+    mysqli_stmt_bind_param($stmt, "s", $status);
+}
+
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+?>
+
+<div class="content-body">
+    <div class="container">
+
+        <!-- PAGE TITLE -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title">
+                    <h3>Withdrawal History</h3>
+                    <p class="mb-2">Welcome To <?= htmlspecialchars($sitename) ?> Management</p>
                 </div>
-
-                <div class="row">
-                    <div class="col-xxl-12 col-xl-12">
-
-                        <?php
-                        $limit  = 10;
-                        $page   = isset($_GET['page']) && is_numeric($_GET['page']) ? (int) $_GET['page'] : 1;
-                        $offset = ($page - 1) * $limit;
-
-                        // COUNT TOTAL WITHDRAWALS
-                        $count_sql = "SELECT COUNT(*) AS total FROM withdrawals WHERE user_id = ?";
-                        $count_stmt = mysqli_prepare($connection, $count_sql);
-                        mysqli_stmt_bind_param($count_stmt, "i", $user_id);
-                        mysqli_stmt_execute($count_stmt);
-                        $count_result = mysqli_stmt_get_result($count_stmt);
-                        $total_row = mysqli_fetch_assoc($count_result);
-                        $total_records = (int)($total_row['total'] ?? 0);
-                        $total_pages = (int) ceil($total_records / $limit);
-                        mysqli_stmt_close($count_stmt);
-
-                        // FETCH WITHDRAWAL HISTORY (using users table too)
-                        // NOTE: If your column name is "date" keep it, if it's "created_at" change it.
-                        $sql = "
-                            SELECT 
-                            withdrawals.id,
-                                withdrawals.amount,
-                                withdrawals.which_account,
-                                withdrawals.status,
-                                withdrawals.date,
-                                users.fullname
-                            FROM withdrawals, users
-                            WHERE withdrawals.user_id = users.id
-                            ORDER BY withdrawals.id DESC
-                        ";
-
-                        $stmt = mysqli_prepare($connection, $sql);
-                        mysqli_stmt_execute($stmt);
-                        $result = mysqli_stmt_get_result($stmt);
-                        ?>
-
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>S/N</th>
-                                                <th>ACCOUNT HOLDER</th>
-                                                <th>ACCOUNT</th>
-                                                <th>AMOUNT</th>
-                                                <th>DATE</th>
-                                                <th>STATUS</th>
-                                                <th>ACTION</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-
-                                            <?php if (mysqli_num_rows($result) > 0): $count = 0; ?>
-                                                <?php while ($row = mysqli_fetch_assoc($result)): $count++; ?>
-                                                    <tr>
-                                                        <td><?= $count ?></td>
-                                                        <td><?= htmlspecialchars($row['fullname']) ?></td>
-                                                        <td><?= htmlspecialchars($row['which_account']) ?></td>
-                                                        <td>$<?= number_format((float)$row['amount'], 2) ?></td>
-                                                        <td><?= !empty($row['date']) ? date("Y-m-d", strtotime($row['date'])) : '-' ?></td>
-                                                        <td>
-                                                            <span class="badge 
-                                                                <?php
-                                                                    if ($row['status'] === 'approved' || $row['status'] === 'settled') echo 'bg-success';
-                                                                    elseif ($row['status'] === 'failed') echo 'bg-danger';
-                                                                    else echo 'bg-warning';
-                                                                ?>">
-                                                                <?= ucfirst($row['status']) ?>
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                           <a href="./details/?id=<?php echo $row['id'] ?>"> <span class="badge p-2 bg-info text-white">View Details</span></a>
-                                                        </td>
-                                                    </tr>
-                                                <?php endwhile; ?>
-                                            <?php else: ?>
-                                                <tr>
-                                                    <td colspan="6" class="text-center">No withdrawal history found</td>
-                                                </tr>
-                                            <?php endif; ?>
-
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                <?php if ($total_pages > 1): ?>
-                                    <nav class="mt-3">
-                                        <ul class="pagination">
-                                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                                                <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                                                    <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
-                                                </li>
-                                            <?php endfor; ?>
-                                        </ul>
-                                    </nav>
-                                <?php endif; ?>
-
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
             </div>
         </div>
+
+        <!-- STATUS CARDS -->
+        <div class="row">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-4">
+                            <div class="stat-widget-1">
+                                <h6><i class="fi fi-rr-money-bill-wave me-2"></i>Pending Withdrawal</h6>
+                                <p class="mb-0 text-lg"><?= $statusCounts['pending'] ?> </p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="stat-widget-1">
+                                <h6><i class="fi fi-rr-donate me-2"></i>Declined Withdrawal</h6>
+                                <p class="mb-0 text-lg"><?= $statusCounts['failed'] ?> </p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="stat-widget-1">
+                                <h6><i class="fi fi-rr-exchange me-2"></i>Approved Withdrawal</h6>
+                                <p class="mb-0 text-lg"><?= $statusCounts['approved'] ?> </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTER -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <form method="GET">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Withdrawals</option>
+                        <option value="pending" <?= $status == 'pending' ? 'selected' : '' ?>>Pending</option>
+                        <option value="approved" <?= $status == 'approved' ? 'selected' : '' ?>>Approved</option>
+                        <option value="failed" <?= $status == 'failed' ? 'selected' : '' ?>>Declined</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>S/N</th>
+                                    <th>ACCOUNT HOLDER</th>
+                                    <th>ACCOUNT</th>
+                                    <th>AMOUNT</th>
+                                    <th>DATE</th>
+                                    <th>STATUS</th>
+                                    <th>ACTION</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                <?php if (mysqli_num_rows($result) > 0): $sn = 0; ?>
+                                    <?php while ($row = mysqli_fetch_assoc($result)): $sn++; ?>
+                                        <tr>
+                                            <td><?= $sn ?></td>
+                                            <td><?= htmlspecialchars($row['fullname']) ?></td>
+                                            <td><?= htmlspecialchars($row['which_account']) ?></td>
+                                            <td>₦<?= number_format($row['amount'], 2) ?></td>
+                                            <td><?= date("Y-m-d", strtotime($row['date'])) ?></td>
+                                            <td>
+                                                <span class="badge 
+                                                    <?= $row['status'] == 'approved' ? 'bg-success' :
+                                                        ($row['status'] == 'failed' ? 'bg-danger' : 'bg-warning') ?>">
+                                                    <?= ucfirst($row['status']) ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="./details/?id=<?= $row['id'] ?>">
+                                                    <span class="badge bg-info p-2 text-white">View Details</span>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center">No withdrawal records found</td>
+                                    </tr>
+                                <?php endif; ?>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 
         <div class="footer">
             <div class="container">

@@ -1,34 +1,51 @@
 <?php
 include("../../server/connection.php");
 
-
-
-
+/* ============================
+   VARIABLES
+============================ */
 $success = "";
-$fullnameErr = "";
-$emailErr = "";
-$passwordErr = "";
-$confirmPasswordErr = "";
-$termsErr = "";
-$exist_err = "";
+$fullnameErr = $emailErr = $passwordErr = $confirmPasswordErr = $termsErr = $exist_err = "";
 
-$fullname = "";
-$email = "";
-$accept_terms = "";
+$fullname = $email = $accept_terms = "";
 
+/* ============================
+   FETCH GENERAL SETTINGS
+============================ */
+$settings = mysqli_fetch_assoc(
+    mysqli_query($connection, "SELECT welcome_bonus, referral_bonus FROM general_settings LIMIT 1")
+);
 
+$WELCOME_BONUS  = (float)$settings['welcome_bonus'];
+$REFERRAL_BONUS = (float)$settings['referral_bonus'];
 
+/* ============================
+   REFERRAL
+============================ */
+$referral_code = $_GET['ref'] ?? null;
+$referrer_id   = null;
+
+function generateReferralCode($length = 8)
+{
+    return strtoupper(bin2hex(random_bytes($length / 2)));
+}
+
+/* ============================
+   FORM SUBMIT
+============================ */
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
-    $fullname = $_POST['fullName'] ?? '';
-    $email    = $_POST['email'] ?? '';
+    $fullname = trim($_POST['fullName'] ?? '');
+    $email    = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    $accept_terms = isset($_POST['acceptTerms']) ? $_POST['acceptTerms'] : "";
     $confirmPassword = $_POST['confirmPassword'] ?? '';
+    $accept_terms = $_POST['acceptTerms'] ?? '';
 
     $hasError = false;
 
-    // VALIDATION
+    /* ============================
+       VALIDATION
+    ============================ */
     if (empty($fullname)) {
         $fullnameErr = "Full name is required";
         $hasError = true;
@@ -42,10 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         $hasError = true;
     }
 
-    if (empty($password)) {
-        $passwordErr = "Password is required";
-        $hasError = true;
-    } elseif (strlen($password) < 6) {
+    if (strlen($password) < 6) {
         $passwordErr = "Password must be at least 6 characters";
         $hasError = true;
     }
@@ -60,70 +74,122 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         $hasError = true;
     }
 
-    // EMAIL EXISTS CHECK
-    $sql_exist = "SELECT id FROM users WHERE email = ? LIMIT 1";
-    $stmt_exist = mysqli_prepare($connection, $sql_exist);
-    mysqli_stmt_bind_param($stmt_exist, "s", $email);
-    mysqli_stmt_execute($stmt_exist);
-    mysqli_stmt_store_result($stmt_exist);
+    /* ============================
+       CHECK EMAIL EXISTS
+    ============================ */
+    $check = mysqli_prepare($connection, "SELECT id FROM users WHERE email = ? LIMIT 1");
+    mysqli_stmt_bind_param($check, "s", $email);
+    mysqli_stmt_execute($check);
+    mysqli_stmt_store_result($check);
 
-    if (mysqli_stmt_num_rows($stmt_exist) > 0) {
+    if (mysqli_stmt_num_rows($check) > 0) {
         $exist_err = "This email is already registered!";
         $hasError = true;
     }
-    mysqli_stmt_close($stmt_exist);
+    mysqli_stmt_close($check);
 
-    // If NO ERRORS → insert user
+    /* ============================
+       FIND REFERRER
+    ============================ */
+    if (!empty($referral_code)) {
+        $ref = mysqli_prepare(
+            $connection,
+            "SELECT id FROM users WHERE referral_code = ? LIMIT 1"
+        );
+        mysqli_stmt_bind_param($ref, "s", $referral_code);
+        mysqli_stmt_execute($ref);
+        $row = mysqli_fetch_assoc(mysqli_stmt_get_result($ref));
+        $referrer_id = $row['id'] ?? null;
+        mysqli_stmt_close($ref);
+    }
+
+    /* ============================
+       INSERT USER + BONUSES
+    ============================ */
     if (!$hasError) {
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-       
+        mysqli_begin_transaction($connection);
 
-        $virtualCardExpiry = (new DateTime())->modify('+4 years')->format('Y-m-d');
+        try {
 
-        if (!$hasError) {
-            $sql = "INSERT INTO users (fullname, email, password)
-                    VALUES (?, ?, ?)";
-            $stmt = mysqli_prepare($connection, $sql);
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $myReferralCode = generateReferralCode();
 
-            if ($stmt) {
-                mysqli_stmt_bind_param(
-                    $stmt,
-                    "sss",
-                    $fullname,
-                    $email,
-                    $hashedPassword,
-                );
+            /* INSERT USER */
+            $stmt = mysqli_prepare($connection, "
+                INSERT INTO users 
+                (fullname, email, password, referral_code, referred_by, balance)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ");
+            mysqli_stmt_bind_param(
+                $stmt,
+                "ssssid",
+                $fullname,
+                $email,
+                $hashedPassword,
+                $myReferralCode,
+                $referrer_id,
+                $WELCOME_BONUS
+            );
+            mysqli_stmt_execute($stmt);
+            $newUserId = mysqli_insert_id($connection);
+            mysqli_stmt_close($stmt);
 
-                mysqli_stmt_execute($stmt);
+            /* ACTIVITY: REGISTER */
+            mysqli_query($connection, "
+                INSERT INTO activity (user_id, activity_type, description)
+                VALUES ($newUserId, 'register', 'User registered')
+            ");
 
-                if (mysqli_stmt_affected_rows($stmt) > 0) {
-                    $success = "User registered successfully";
-
-                    // clear form values
-                    $fullname = "";
-                    $email = "";
-                    $accept_terms = "";
-
-                    echo "<script>
-                        setTimeout(() => {
-                            window.location.href = '../sign_in/'
-                        }, 2500);
-                    </script>";
-                } else {
-                    $success = "Registration failed";
-                }
-
-                mysqli_stmt_close($stmt);
-            } else {
-                $success = "Database error: " . mysqli_error($connection);
+            /* ACTIVITY: WELCOME BONUS */
+            if ($WELCOME_BONUS > 0) {
+                mysqli_query($connection, "
+                    INSERT INTO activity (user_id, activity_type, amount, description)
+                    VALUES ($newUserId, 'profit', $WELCOME_BONUS, 'Welcome bonus')
+                ");
             }
+
+            /* REFERRAL BONUS */
+            if (!empty($referrer_id) && $REFERRAL_BONUS > 0) {
+
+                $credit = mysqli_prepare($connection, "
+                    UPDATE users 
+                    SET referral_balance = referral_balance + ?
+                    WHERE id = ?
+                ");
+                mysqli_stmt_bind_param($credit, "di", $REFERRAL_BONUS, $referrer_id);
+                mysqli_stmt_execute($credit);
+                mysqli_stmt_close($credit);
+
+                mysqli_query($connection, "
+                    INSERT INTO activity (user_id, activity_type, amount, description)
+                    VALUES ($referrer_id, 'referral', $REFERRAL_BONUS, 'Referral bonus earned')
+                ");
+
+                mysqli_query($connection, "
+                    INSERT INTO activity (user_id, activity_type, description)
+                    VALUES ($newUserId, 'referral', 'Registered via referral')
+                ");
+            }
+
+            mysqli_commit($connection);
+
+            $success = "Account created successfully";
+
+            echo "<script>
+                setTimeout(() => {
+                    window.location.href = '../sign_in/';
+                }, 1000);
+            </script>";
+
+        } catch (Exception $e) {
+            mysqli_rollback($connection);
+            $exist_err = "Registration failed. Try again.";
         }
     }
 }
-
-
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -144,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
             <div class="row justify-content-center align-items-center g-0">
                 <div class="col-xl-8">
                     <div class="row g-0">
-                        
+
 
                         <div class="col-lg-12">
                             <div class="auth-form">

@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw'])) {
                                             <div class="mb-3">
                                                 <label class="form-label">Amount</label>
                                                 <input name="amount" type="number" step="0.01" min="1" class="form-control" placeholder="Amount" required>
-                                                <small class="text-muted">Available: $<?= number_format($currentBalance, 2) ?></small>
+                                                <small class="text-muted">Available: ₦<?= number_format($currentBalance, 2) ?></small>
                                             </div>
 
                                             <div class="mb-3">

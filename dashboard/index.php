@@ -111,7 +111,7 @@ function money($amount)
                                             </div>
                                             <div class="wallet-nav-text">
                                                 <h3>Balance</h3>
-                                                <p>$<?= money($balance) ?></p>
+                                                <p>₦<?= money($balance) ?></p>
 
                                             </div>
                                         </div>

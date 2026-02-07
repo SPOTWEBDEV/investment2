@@ -1,12 +1,6 @@
 <?php
 include("../../server/connection.php");
 
-// if (!isset($_SESSION['user_id'])) {
-//     header("location: ./signin.php");
-//     exit;
-// }
-
-$user_id = $_SESSION['user_id'];
 ?>
 
 
@@ -52,7 +46,7 @@ $user_id = $_SESSION['user_id'];
                                     </div>
                                 </div>
                                 <div class="col-auto">
-                                     <a href="./details/"><button class="btn btn-primary mr-2">View Deposit History</button></a>
+                                     
                                 </div>
                             </div>
                         </div>
@@ -71,7 +65,7 @@ $user_id = $_SESSION['user_id'];
                                 deposits.amount,
                                 deposits.type_id,
                                 deposits.status,
-                                deposits.date,
+                                deposits.created_at,
                                 users.fullname,
                                 payment_account.type,
                                 payment_account.account_number,
@@ -111,8 +105,8 @@ $user_id = $_SESSION['user_id'];
                                                         <td><?= $count ?></td>
                                                         <td><?= htmlspecialchars($row['fullname']) ?></td>
                                                         <td><?= htmlspecialchars($row['type']) ?></td>
-                                                        <td>$<?= number_format($row['amount'], 2) ?></td>
-                                                        <td><?= date("Y-m-d", strtotime($row['date'])) ?></td>
+                                                        <td>₦<?= number_format($row['amount'], 2) ?></td>
+                                                        <td><?= date("Y-m-d H:m:s", strtotime($row['created_at'])) ?></td>
                                                         <td>
                                                             <span class="badge 
         <?php

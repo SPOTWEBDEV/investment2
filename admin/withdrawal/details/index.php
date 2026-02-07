@@ -142,7 +142,7 @@ if(isset($_GET['decline_withdraw'])) {
 
                                         <tr>
                                             <td><strong>Amount:</strong></td>
-                                            <td>$<?= htmlspecialchars($withdraw['amount']) ?></td>
+                                            <td>₦<?= htmlspecialchars($withdraw['amount']) ?></td>
                                         </tr>
 
                                         <tr>

@@ -11,7 +11,9 @@ $sql = "
         deposits.type_id,
         deposits.amount,
         deposits.status,
-        deposits.date,
+        deposits.type,
+        deposits.automatic_account,
+        deposits.created_at,
 
         users.fullname AS user_fullname,
         users.id AS user_id,
@@ -145,7 +147,7 @@ if (isset($_GET['decline_deposit'])) {
                                             <!-- Deposit Amount -->
                                             <tr>
                                                 <td><span class="text-primary">Deposit Amount:</span></td>
-                                                <td><span class="text-primary">$<?php echo number_format($deposit['amount'], 2); ?></span></td>
+                                                <td><span class="text-primary">₦<?php echo number_format($deposit['amount'], 2); ?></span></td>
                                             </tr>
 
                                             <!-- Status -->
@@ -164,67 +166,87 @@ if (isset($_GET['decline_deposit'])) {
                                             <!-- Date -->
                                             <tr>
                                                 <td>Date:</td>
-                                                <td><?php echo $deposit['date']; ?></td>
+                                                <td><?php echo $deposit['created_at']; ?></td>
                                             </tr>
 
-                                            <!-- Payment Account Used -->
+                                            <?php
+
+                                            if ($deposit['type'] == 'mannuel') { ?>
+
+                                                <!-- Payment Account Used -->
+                                                <tr>
+                                                    <td><strong>Payment Method Used:</strong></td>
+                                                    <td><?php echo ucfirst($deposit['account_type']); ?></td>
+                                                </tr>
+
+                                                <!-- Bank Details (if bank) -->
+                                                <?php if ($deposit['bank_name'] != "") { ?>
+                                                    <tr>
+                                                        <td>Bank Name:</td>
+                                                        <td><?php echo $deposit['bank_name']; ?></td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td>Account Number:</td>
+                                                        <td><?php echo $deposit['account_number']; ?></td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td>Account Name:</td>
+                                                        <td><?php echo $deposit['account_fullname']; ?></td>
+                                                    </tr>
+
+
+                                                <?php } ?>
+
+                                                <!-- Crypto Wallet (if crypto) -->
+                                                <?php if ($deposit['wallet_address'] != "") { ?>
+                                                    <tr>
+                                                        <td>Network:</td>
+                                                        <td><?php echo $deposit['network']; ?></td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td>Wallet Address:</td>
+                                                        <td><?php echo $deposit['wallet_address']; ?></td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td>Label:</td>
+                                                        <td><?php echo $deposit['label']; ?></td>
+                                                    </tr>
+                                                <?php } ?>
+
+                                                <tr>
+                                                    <td>Action</td>
+                                                    <td>
+                                                        <a href="<?php echo $domain ?>/admin/deposits/">
+                                                            <button class="btn btn-primary btn-sm">Back to Deposits</button>
+                                                        </a>
+                                                        <a href="?approve_deposit=<?= $deposit['id'] ?>&amount=<?= $deposit['amount'] ?>&user_id=<?= $deposit['user_id'] ?>">
+                                                            <button class="btn btn-success btn-sm approve-deposit">Approve</button>
+                                                        </a>
+                                                        <a href="?decline_deposit=<?= $deposit['id'] ?>&amount=<?= $deposit['amount'] ?>&user_id=<?= $deposit['user_id'] ?>">
+                                                            <button class="btn btn-danger btn-sm decline-deposit">Decline</button>
+                                                        </a>
+                                                    </td>
+
+                                                </tr>
+
+
+                                            <?php }else{ ?>
+
                                             <tr>
-                                                <td><strong>Payment Method Used:</strong></td>
-                                                <td><?php echo ucfirst($deposit['account_type']); ?></td>
+                                                <td>Account Paid To:</td>
+                                                <td><?php echo $deposit['automatic_account']; ?></td>
                                             </tr>
 
-                                            <!-- Bank Details (if bank) -->
-                                            <?php if ($deposit['bank_name'] != "") { ?>
-                                                <tr>
-                                                    <td>Bank Name:</td>
-                                                    <td><?php echo $deposit['bank_name']; ?></td>
-                                                </tr>
+                                          <?php  }
 
-                                                <tr>
-                                                    <td>Account Number:</td>
-                                                    <td><?php echo $deposit['account_number']; ?></td>
-                                                </tr>
+                                            ?>
 
-                                                <tr>
-                                                    <td>Account Name:</td>
-                                                    <td><?php echo $deposit['account_fullname']; ?></td>
-                                                </tr>
 
-                                                
-                                            <?php } ?>
 
-                                            <!-- Crypto Wallet (if crypto) -->
-                                            <?php if ($deposit['wallet_address'] != "") { ?>
-                                                <tr>
-                                                    <td>Network:</td>
-                                                    <td><?php echo $deposit['network']; ?></td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td>Wallet Address:</td>
-                                                    <td><?php echo $deposit['wallet_address']; ?></td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td>Label:</td>
-                                                    <td><?php echo $deposit['label']; ?></td>
-                                                </tr>
-                                            <?php } ?>
-                                            <tr>
-                                                <td>Action</td>
-                                                <td>
-                                                    <a href="<?php echo $domain ?>/admin/deposits/">
-                                                        <button class="btn btn-primary btn-sm">Back to Deposits</button>
-                                                    </a>
-                                                    <a href="?approve_deposit=<?= $deposit['id'] ?>&amount=<?= $deposit['amount'] ?>&user_id=<?= $deposit['user_id'] ?>">
-                                                        <button class="btn btn-success btn-sm approve-deposit">Approve</button>
-                                                    </a>
-                                                    <a href="?decline_deposit=<?= $deposit['id'] ?>&amount=<?= $deposit['amount'] ?>&user_id=<?= $deposit['user_id'] ?>">
-                                                        <button class="btn btn-danger btn-sm decline-deposit">Decline</button>
-                                                    </a>
-                                                </td>
-
-                                            </tr>
 
                                         </tbody>
                                     </table>

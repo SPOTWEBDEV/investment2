@@ -1,20 +1,22 @@
-
 <div class="sidebar" id="desktopSidebar">
     <div class="brand-logo">
-        <a class="full-logo" href="<?php echo $domain ?>/dashboard/">
-            <img src="<?php echo $domain ?>/images/logoi.png" alt="" width="30">
+        <a class="full-logo" href="<?= $domain ?>/dashboard/">
+            <img src="<?= $domain ?>/images/logoi.png" alt="Logo" width="30">
         </a>
     </div>
 
     <div class="menu">
         <ul>
+
+            <!-- Dashboard -->
             <li>
-                <a href="<?php echo $domain ?>/dashboard/">
+                <a href="<?= $domain ?>/dashboard/">
                     <span><i class="fi fi-rr-home"></i></span>
                     <span class="nav-text">Dashboard</span>
                 </a>
             </li>
 
+            <!-- Deposits -->
             <li>
                 <a href="<?= $domain ?>/deposits/">
                     <span><i class="fi fi-rr-bank"></i></span>
@@ -22,13 +24,15 @@
                 </a>
             </li>
 
+            <!-- Investments -->
             <li>
-                <a href="<?php echo $domain ?>/investment/">
+                <a href="<?= $domain ?>/investment/">
                     <span><i class="fi fi-rr-chart-line-up"></i></span>
-                    <span class="nav-text">Investment</span>
+                    <span class="nav-text">Investments</span>
                 </a>
             </li>
 
+            <!-- Withdrawals -->
             <li>
                 <a href="<?= $domain ?>/withdrawal/">
                     <span><i class="fi fi-rr-donate"></i></span>
@@ -36,14 +40,22 @@
                 </a>
             </li>
 
+            <!-- Referrals -->
             <li>
-                <a style="z-index: 5000 !important;" href="<?php echo $domain ?>/setting/">
-                    <span><i class="fi fi-rr-user"></i></span>
-                    <span class="nav-text">Setting</span>
+                <a href="<?= $domain ?>/referral/">
+                    <span><i class="fi fi-rr-users"></i></span>
+                    <span class="nav-text">Referrals</span>
+                </a>
+            </li>
+
+            <!-- Settings -->
+            <li>
+                <a href="<?= $domain ?>/setting/">
+                    <span><i class="fi fi-rr-settings"></i></span>
+                    <span class="nav-text">Settings</span>
                 </a>
             </li>
 
         </ul>
     </div>
 </div>
-

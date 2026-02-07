@@ -118,7 +118,7 @@ $user_id = $_SESSION['user_id'];
                                                         <td><?= $count ?></td>
                                                         <td><?= htmlspecialchars($row['fullname']) ?></td>
                                                         <td><?= htmlspecialchars($row['which_account']) ?></td>
-                                                        <td>$<?= number_format((float)$row['amount'], 2) ?></td>
+                                                        <td>₦<?= number_format((float)$row['amount'], 2) ?></td>
                                                         <td><?= !empty($row['date']) ? date("Y-m-d", strtotime($row['date'])) : '-' ?></td>
                                                         <td>
                                                             <span class="badge 

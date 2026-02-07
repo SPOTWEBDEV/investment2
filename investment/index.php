@@ -2,25 +2,23 @@
 include("../server/connection.php");
 include("../server/auth/client.php");
 
-/* STATIC PLANS (same IDs as UI) */
-$plans = [
-    1 => [
-        'plan_name' => 'Starter Plan',
-        'price' => 1000,
-        'duration' => 60,
-        'profit_per_day' => 25,
-        'total_profit' => 1500,
-        'stock' => 'avaliable'
-    ],
-    2 => [
-        'plan_name' => 'Premium Plan',
-        'price' => 2000,
-        'duration' => 90,
-        'profit_per_day' => 40,
-        'total_profit' => 3600,
-        'stock' => 'avaliable'
-    ]
-];
+$plans = [];
+
+$query = mysqli_query(
+    $connection,
+    "SELECT * FROM investment_plans WHERE status = 'available'"
+);
+
+while ($row = mysqli_fetch_assoc($query)) {
+    $plans[$row['id']] = [
+        'plan_name' => $row['plan_name'],
+        'price' => $row['price'],
+        'duration' => $row['duration'],
+        'profit_per_day' => $row['profit_per_day'],
+        'total_profit' => $row['total_profit']
+    ];
+}
+
 
 
 
