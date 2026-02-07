@@ -256,7 +256,7 @@ function money($amount)
                                                             <td><?= date("Y-m-d", strtotime($transaction['date'])) ?></td>
                                                             <td>
                                                                 <span class="badge text-white 
-                                                                    <?= $transaction['status'] == 'pending' ? 'bg-warning' : ($transaction['status'] == 'completed' ? 'bg-success' : 'bg-danger') ?>">
+                                                                    <?= $transaction['status'] == 'pending' ? 'bg-warning' : ($transaction['status'] == 'completed' || $transaction['status'] == 'approved' ? 'bg-success' : 'bg-danger') ?>">
                                                                     <?= ucfirst($transaction['status']) ?>
                                                                 </span>
                                                             </td>
